@@ -7,9 +7,9 @@
 
 > *The software, hardware and materials distributed under this license are provided in the hope that it will be useful on an **'as is' basis, without warranties or conditions of any kind, either expressed or implied; without even the implied warranty of merchantability or fitness for a particular purpose**. See the Solderpad Hardware License for more details.*
 
-> *You should have received a copy of the Solderpad Hardware License along with the ODIN HDL files (see [LICENSE](LICENSE) file). If not, see <https://solderpad.org/licenses/SHL-2.0/>.*
+> *You should have received a copy of the Solderpad Hardware License along with the DITES HDL files (see [LICENSE](LICENSE) file). If not, see <https://solderpad.org/licenses/SHL-2.0/>.*
 
-DITES is a **dual-core** TEE SoC based on a Reduced Instruction Set Computer-V (RISC-V). The key features of our FPGA-NHAP are as follows.
+DITES is a **dual-core** TEE SoC based on a Reduced Instruction Set Computer-V (RISC-V). The key features of our DITES are as follows.
 
 **(a)** a **fully isolated multi-level** bus architecture based on a lightweight RISC-V processor with an integrated **crypto core** supporting Secure Hashing Algorithm-1 (SHA1), Advanced Encryption Standard (AES), and Rivest–Shamir–Adleman (RSA), among which RSA can be configured to five key lengths (192, 256, 512, 1024, and 2048 bits). 
 
