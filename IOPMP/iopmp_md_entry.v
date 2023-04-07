@@ -1,0 +1,444 @@
+/*Copyright 2018-2021 T-Head Semiconductor Co., Ltd.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+module iopmp_meomery_domain(
+  memory_domain_selected,
+  cp0_pmp_csr_sel,
+  cp0_pmp_csr_wen,
+  reg_md_cfg,
+  cp0_pmp_updt_data,
+  cpurst_b,
+  forever_cpuclk,
+  input_addr_0,
+  input_addr_1,
+  input_addr_0_write,
+  input_addr_1_write,
+  input_addr_0_deny,
+  input_addr_1_deny,
+  pmp_cp0_data
+);
+
+// &Ports; @25
+input           memory_domain_selected;
+input   [11:0]  cp0_pmp_csr_sel;         //reg   
+input           cp0_pmp_csr_wen;            //reg
+input   [31:0]  reg_md_cfg;
+input   [31:0]  cp0_pmp_updt_data;   //reg        
+input           cpurst_b;               //reg    
+input           forever_cpuclk;      //not use       
+input   [31:0]  input_addr_0;            //hit   
+input   [31:0]  input_addr_1;            //hit 
+input           input_addr_0_write;
+input           input_addr_1_write;  
+output          input_addr_0_deny;    //enc  
+output          input_addr_1_deny;    //enc  
+output  [31:0]  pmp_cp0_data;             //reg  
+
+
+// &Regs; @26
+
+// &Wires; @27
+wire    [11:0]  cp0_pmp_csr_sel;            
+wire            cp0_pmp_csr_wen;            
+wire    [1 :0]  cp0_pmp_mstatus_mpp;        
+wire            cp0_pmp_mstatus_mprv;       
+wire    [31:0]  cp0_pmp_updt_data;          
+wire            cp0_yy_clk_en;              
+wire            cp0_yy_machine_mode_aft_dbg; 
+wire            cp0_yy_secu_mode_aft_dbg;   
+wire            cpuclk;                     
+wire            cpurst_b;                   
+wire            forever_cpuclk;             
+wire    [7 :0]  ifu_addr_ge_bottom;         
+wire    [31:0]  input_addr_0;               
+wire    [3 :0]  ifu_bmu_prot;               
+wire    [7 :0]  lsu_addr_ge_bottom;         
+wire    [31:0]  input_addr_1;               
+wire            lsu_bmu_write;              
+wire            pad_yy_gate_clk_en_b;       
+reg            input_addr_0_deny;      
+reg            input_addr_1_deny;      
+wire    [31:0]  pmp_cp0_data;               
+wire    [19:0]  pmp_csr_sel;                
+wire    [19:0]  pmp_csr_wen;                
+wire            pmp_ifu_acc_scu;            
+wire    [7 :0]  pmp_ifu_hit;                
+wire            pmp_lsu_acc_scu;            
+wire    [7 :0]  pmp_lsu_hit;                
+wire    [31:0]  pmpaddr0_value;             
+wire    [31:0]  pmpaddr1_value;             
+wire    [31:0]  pmpaddr2_value;             
+wire    [31:0]  pmpaddr3_value;             
+wire    [31:0]  pmpaddr4_value;             
+wire    [31:0]  pmpaddr5_value;             
+wire    [31:0]  pmpaddr6_value;             
+wire    [31:0]  pmpaddr7_value;             
+wire    [1 :0]  regs_comp_addr_mode0;       
+wire    [1 :0]  regs_comp_addr_mode1;       
+wire    [1 :0]  regs_comp_addr_mode2;       
+wire    [1 :0]  regs_comp_addr_mode3;       
+wire    [1 :0]  regs_comp_addr_mode4;       
+wire    [1 :0]  regs_comp_addr_mode5;       
+wire    [1 :0]  regs_comp_addr_mode6;       
+wire    [1 :0]  regs_comp_addr_mode7;       
+wire            regs_comp_excut0;           
+wire            regs_comp_excut1;           
+wire            regs_comp_excut2;           
+wire            regs_comp_excut3;           
+wire            regs_comp_excut4;           
+wire            regs_comp_excut5;           
+wire            regs_comp_excut6;           
+wire            regs_comp_excut7;           
+wire            regs_comp_lock0;            
+wire            regs_comp_lock1;            
+wire            regs_comp_lock2;            
+wire            regs_comp_lock3;            
+wire            regs_comp_lock4;            
+wire            regs_comp_lock5;            
+wire            regs_comp_lock6;            
+wire            regs_comp_lock7;            
+wire            regs_comp_read0;            
+wire            regs_comp_read1;            
+wire            regs_comp_read2;            
+wire            regs_comp_read3;            
+wire            regs_comp_read4;            
+wire            regs_comp_read5;            
+wire            regs_comp_read6;            
+wire            regs_comp_read7;            
+wire            regs_comp_write0;           
+wire            regs_comp_write1;           
+wire            regs_comp_write2;           
+wire            regs_comp_write3;           
+wire            regs_comp_write4;           
+wire            regs_comp_write5;           
+wire            regs_comp_write6;           
+wire            regs_comp_write7;           
+wire            wr_pmp_regs;        //not use        
+
+
+parameter PMPCFG0   = 12'h3A0;
+parameter PMPCFG1   = 12'h3A4;
+parameter PMPCFG2   = 12'h3A8;
+parameter PMPCFG3   = 12'h3AC;
+
+parameter PMPADDR0  = 12'h3B0;
+parameter PMPADDR1  = 12'h3B4;
+parameter PMPADDR2  = 12'h3B8;
+parameter PMPADDR3  = 12'h3BC;
+parameter PMPADDR4  = 12'h3C0;
+parameter PMPADDR5  = 12'h3C4;
+parameter PMPADDR6  = 12'h3C8;
+parameter PMPADDR7  = 12'h3CC;
+parameter PMPADDR8  = 12'h3D0;
+parameter PMPADDR9  = 12'h3D4;
+parameter PMPADDR10 = 12'h3D8;
+parameter PMPADDR11 = 12'h3DC;
+parameter PMPADDR12 = 12'h3E0;
+parameter PMPADDR13 = 12'h3E4;
+parameter PMPADDR14 = 12'h3E8;
+parameter PMPADDR15 = 12'h3EC;
+parameter PMPTEECFG = 12'hBEF;
+
+assign pmp_csr_sel[0]  = cp0_pmp_csr_sel[11:0] == PMPCFG0; 
+assign pmp_csr_sel[1]  = cp0_pmp_csr_sel[11:0] == PMPCFG1; 
+assign pmp_csr_sel[2]  = cp0_pmp_csr_sel[11:0] == PMPCFG2; 
+assign pmp_csr_sel[3]  = cp0_pmp_csr_sel[11:0] == PMPCFG3; 
+assign pmp_csr_sel[4]  = cp0_pmp_csr_sel[11:0] == PMPADDR0; 
+assign pmp_csr_sel[5]  = cp0_pmp_csr_sel[11:0] == PMPADDR1; 
+assign pmp_csr_sel[6]  = cp0_pmp_csr_sel[11:0] == PMPADDR2; 
+assign pmp_csr_sel[7]  = cp0_pmp_csr_sel[11:0] == PMPADDR3; 
+assign pmp_csr_sel[8]  = cp0_pmp_csr_sel[11:0] == PMPADDR4; 
+assign pmp_csr_sel[9]  = cp0_pmp_csr_sel[11:0] == PMPADDR5; 
+assign pmp_csr_sel[10] = cp0_pmp_csr_sel[11:0] == PMPADDR6; 
+assign pmp_csr_sel[11] = cp0_pmp_csr_sel[11:0] == PMPADDR7; 
+assign pmp_csr_sel[12] = cp0_pmp_csr_sel[11:0] == PMPADDR8; 
+assign pmp_csr_sel[13] = cp0_pmp_csr_sel[11:0] == PMPADDR9; 
+assign pmp_csr_sel[14] = cp0_pmp_csr_sel[11:0] == PMPADDR10; 
+assign pmp_csr_sel[15] = cp0_pmp_csr_sel[11:0] == PMPADDR11; 
+assign pmp_csr_sel[16] = cp0_pmp_csr_sel[11:0] == PMPADDR12; 
+assign pmp_csr_sel[17] = cp0_pmp_csr_sel[11:0] == PMPADDR13; 
+assign pmp_csr_sel[18] = cp0_pmp_csr_sel[11:0] == PMPADDR14; 
+assign pmp_csr_sel[19] = cp0_pmp_csr_sel[11:0] == PMPADDR15;
+
+assign pmp_csr_wen[19:0] = pmp_csr_sel[19:0] & {20{cp0_pmp_csr_wen}};
+
+assign cp0_yy_secu_mode_aft_dbg = 1'b0;
+
+assign wr_pmp_regs = |pmp_csr_wen[19:0];
+
+// &Instance("cr_pmp_regs"); @102
+cr_iopmp_regs  x_cr_iopmp_regs (
+    .cp0_pmp_updt_data        (cp0_pmp_updt_data       ),
+    .cp0_yy_secu_mode_aft_dbg (cp0_yy_secu_mode_aft_dbg),
+    .cpuclk                   (forever_cpuclk          ),
+    .cpurst_b                 (cpurst_b                ),
+    .pmp_cp0_data             (pmp_cp0_data            ),
+    .pmp_csr_sel              (pmp_csr_sel             ),
+    .pmp_csr_wen              (pmp_csr_wen             ),
+    .pmpaddr0_value           (pmpaddr0_value          ),
+    .pmpaddr1_value           (pmpaddr1_value          ),
+    .pmpaddr2_value           (pmpaddr2_value          ),
+    .pmpaddr3_value           (pmpaddr3_value          ),
+    .pmpaddr4_value           (pmpaddr4_value          ),
+    .pmpaddr5_value           (pmpaddr5_value          ),
+    .pmpaddr6_value           (pmpaddr6_value          ),
+    .pmpaddr7_value           (pmpaddr7_value          ),
+    .regs_comp_addr_mode0     (regs_comp_addr_mode0    ),
+    .regs_comp_addr_mode1     (regs_comp_addr_mode1    ),
+    .regs_comp_addr_mode2     (regs_comp_addr_mode2    ),
+    .regs_comp_addr_mode3     (regs_comp_addr_mode3    ),
+    .regs_comp_addr_mode4     (regs_comp_addr_mode4    ),
+    .regs_comp_addr_mode5     (regs_comp_addr_mode5    ),
+    .regs_comp_addr_mode6     (regs_comp_addr_mode6    ),
+    .regs_comp_addr_mode7     (regs_comp_addr_mode7    ),
+    .regs_comp_excut0         (regs_comp_excut0        ),
+    .regs_comp_excut1         (regs_comp_excut1        ),
+    .regs_comp_excut2         (regs_comp_excut2        ),
+    .regs_comp_excut3         (regs_comp_excut3        ),
+    .regs_comp_excut4         (regs_comp_excut4        ),
+    .regs_comp_excut5         (regs_comp_excut5        ),
+    .regs_comp_excut6         (regs_comp_excut6        ),
+    .regs_comp_excut7         (regs_comp_excut7        ),
+    .regs_comp_lock0          (regs_comp_lock0         ),
+    .regs_comp_lock1          (regs_comp_lock1         ),
+    .regs_comp_lock2          (regs_comp_lock2         ),
+    .regs_comp_lock3          (regs_comp_lock3         ),
+    .regs_comp_lock4          (regs_comp_lock4         ),
+    .regs_comp_lock5          (regs_comp_lock5         ),
+    .regs_comp_lock6          (regs_comp_lock6         ),
+    .regs_comp_lock7          (regs_comp_lock7         ),
+    .regs_comp_read0          (regs_comp_read0         ),
+    .regs_comp_read1          (regs_comp_read1         ),
+    .regs_comp_read2          (regs_comp_read2         ),
+    .regs_comp_read3          (regs_comp_read3         ),
+    .regs_comp_read4          (regs_comp_read4         ),
+    .regs_comp_read5          (regs_comp_read5         ),
+    .regs_comp_read6          (regs_comp_read6         ),
+    .regs_comp_read7          (regs_comp_read7         ),
+    .regs_comp_write0         (regs_comp_write0        ),
+    .regs_comp_write1         (regs_comp_write1        ),
+    .regs_comp_write2         (regs_comp_write2        ),
+    .regs_comp_write3         (regs_comp_write3        ),
+    .regs_comp_write4         (regs_comp_write4        ),
+    .regs_comp_write5         (regs_comp_write5        ),
+    .regs_comp_write6         (regs_comp_write6        ),
+    .regs_comp_write7         (regs_comp_write7        )
+);
+
+wire [7:0] inter_input_addr_0_deny;
+wire [7:0] inter_input_addr_1_deny;
+////////////////////////////////////////////////////////////////
+//////////////////deny decide///////////////////////////////////
+///////////////////////////////////////////////////////////////
+assign inter_input_addr_0_deny[0]          =  (!input_addr_0_write && !regs_comp_read0) 
+                                    || (input_addr_0_write && !regs_comp_write0);
+assign inter_input_addr_0_deny[1]          =  (!input_addr_0_write && !regs_comp_read1) 
+                                    || (input_addr_0_write && !regs_comp_write1);
+assign inter_input_addr_0_deny[2]          =  (!input_addr_0_write && !regs_comp_read2) 
+                                    || (input_addr_0_write && !regs_comp_write2);
+assign inter_input_addr_0_deny[3]          =  (!input_addr_0_write && !regs_comp_read3) 
+                                    || (input_addr_0_write && !regs_comp_write3);
+assign inter_input_addr_0_deny[4]          =  (!input_addr_0_write && !regs_comp_read4) 
+                                    || (input_addr_0_write && !regs_comp_write4);
+assign inter_input_addr_0_deny[5]          =  (!input_addr_0_write && !regs_comp_read5) 
+                                    || (input_addr_0_write && !regs_comp_write5);
+assign inter_input_addr_0_deny[6]          =  (!input_addr_0_write && !regs_comp_read6) 
+                                    || (input_addr_0_write && !regs_comp_write6);
+assign inter_input_addr_0_deny[7]          =  (!input_addr_0_write && !regs_comp_read7) 
+                                    || (input_addr_0_write && !regs_comp_write7);
+
+assign inter_input_addr_1_deny[0]          =  (!input_addr_1_write && !regs_comp_read0) 
+                                    || (input_addr_1_write && !regs_comp_write0);
+assign inter_input_addr_1_deny[1]          =  (!input_addr_1_write && !regs_comp_read1) 
+                                    || (input_addr_1_write && !regs_comp_write1);
+assign inter_input_addr_1_deny[2]          =  (!input_addr_1_write && !regs_comp_read2) 
+                                    || (input_addr_1_write && !regs_comp_write2);
+assign inter_input_addr_1_deny[3]          =  (!input_addr_1_write && !regs_comp_read3) 
+                                    || (input_addr_1_write && !regs_comp_write3);
+assign inter_input_addr_1_deny[4]          =  (!input_addr_1_write && !regs_comp_read4) 
+                                    || (input_addr_1_write && !regs_comp_write4);
+assign inter_input_addr_1_deny[5]          =  (!input_addr_1_write && !regs_comp_read5) 
+                                    || (input_addr_1_write && !regs_comp_write5);
+assign inter_input_addr_1_deny[6]          =  (!input_addr_1_write && !regs_comp_read6) 
+                                    || (input_addr_1_write && !regs_comp_write6);
+assign inter_input_addr_1_deny[7]          =  (!input_addr_1_write && !regs_comp_read7) 
+                                    || (input_addr_1_write && !regs_comp_write7);
+
+always @(*)
+begin
+  if(memory_domain_selected) begin
+    casez(pmp_ifu_hit[7:0])
+      8'b???????1  : input_addr_0_deny = inter_input_addr_0_deny[0];
+      8'b??????10  : input_addr_0_deny = inter_input_addr_0_deny[1];
+      8'b?????100  : input_addr_0_deny = inter_input_addr_0_deny[2];
+      8'b????1000  : input_addr_0_deny = inter_input_addr_0_deny[3];
+      8'b???10000  : input_addr_0_deny = inter_input_addr_0_deny[4];
+      8'b??100000  : input_addr_0_deny = inter_input_addr_0_deny[5];
+      8'b?1000000  : input_addr_0_deny = inter_input_addr_0_deny[6];
+      8'b10000000  : input_addr_0_deny = inter_input_addr_0_deny[7];
+      8'b00000000  : input_addr_0_deny = 1'b1;
+      default      : input_addr_0_deny = 1'bx;
+    endcase
+  end
+  else begin
+      input_addr_0_deny = 1'b1;
+  end
+// &CombEnd; @103
+end
+
+
+always @(*)
+begin
+  if(memory_domain_selected) begin
+    casez(pmp_lsu_hit[7:0])
+      8'b???????1  : input_addr_1_deny = inter_input_addr_1_deny[0];
+      8'b??????10  : input_addr_1_deny = inter_input_addr_1_deny[1];
+      8'b?????100  : input_addr_1_deny = inter_input_addr_1_deny[2];
+      8'b????1000  : input_addr_1_deny = inter_input_addr_1_deny[3];
+      8'b???10000  : input_addr_1_deny = inter_input_addr_1_deny[4];
+      8'b??100000  : input_addr_1_deny = inter_input_addr_1_deny[5];
+      8'b?1000000  : input_addr_1_deny = inter_input_addr_1_deny[6];
+      8'b10000000  : input_addr_1_deny = inter_input_addr_1_deny[7];
+      8'b00000000  : input_addr_1_deny = 1'b1;
+      default      : input_addr_1_deny = 1'bx;
+    endcase
+  end
+  else begin
+      input_addr_1_deny = 1'b1;
+  end
+// &CombEnd; @118
+end
+////////////////////////////////////////////////////////////////
+//////////////////deny decide///////////////////////////////////
+///////////////////////////////////////////////////////////////
+
+
+// &Force("bus","input_addr_0",31,0); @104
+// &Force("bus","input_addr_1",31,0); @105
+
+// &Instance("cr_iopmp_comp_hit", "x_cr_iopmp_comp_hit_0"); @108
+cr_iopmp_comp_hit  x_cr_iopmp_comp_hit_0 (
+  .addr_match_mode           (regs_comp_addr_mode0[1:0]),
+  .ifu_acc_addr              (input_addr_0[31:0]       ),
+  .ifu_addr_ge_bottom        (1'b1                     ),
+  .ifu_addr_ge_pmpaddr       (ifu_addr_ge_bottom[0]    ),
+  .lsu_acc_addr              (input_addr_1[31:0]       ),
+  .lsu_addr_ge_bottom        (1'b1                     ),
+  .lsu_addr_ge_pmpaddr       (lsu_addr_ge_bottom[0]    ),
+  .pmp_ifu_hit               (pmp_ifu_hit[0]           ),
+  .pmp_lsu_hit               (pmp_lsu_hit[0]           ),
+  .pmpaddr                   (pmpaddr0_value[31:0]     )
+);
+
+// &Instance("cr_iopmp_comp_hit", "x_cr_iopmp_comp_hit_1"); @123
+cr_iopmp_comp_hit  x_cr_iopmp_comp_hit_1 (
+  .addr_match_mode           (regs_comp_addr_mode1[1:0]),
+  .ifu_acc_addr              (input_addr_0[31:0]       ),
+  .ifu_addr_ge_bottom        (ifu_addr_ge_bottom[0]    ),
+  .ifu_addr_ge_pmpaddr       (ifu_addr_ge_bottom[1]    ),
+  .lsu_acc_addr              (input_addr_1[31:0]       ),
+  .lsu_addr_ge_bottom        (lsu_addr_ge_bottom[0]    ),
+  .lsu_addr_ge_pmpaddr       (lsu_addr_ge_bottom[1]    ),
+  .pmp_ifu_hit               (pmp_ifu_hit[1]           ),
+  .pmp_lsu_hit               (pmp_lsu_hit[1]           ),
+  .pmpaddr                   (pmpaddr1_value[31:0]     )
+);
+
+cr_iopmp_comp_hit  x_cr_iopmp_comp_hit_2 (
+  .addr_match_mode           (regs_comp_addr_mode2[1:0]),
+  .ifu_acc_addr              (input_addr_0[31:0]       ),
+  .ifu_addr_ge_bottom        (ifu_addr_ge_bottom[1]    ),
+  .ifu_addr_ge_pmpaddr       (ifu_addr_ge_bottom[2]    ),
+  .lsu_acc_addr              (input_addr_1[31:0]       ),
+  .lsu_addr_ge_bottom        (lsu_addr_ge_bottom[1]    ),
+  .lsu_addr_ge_pmpaddr       (lsu_addr_ge_bottom[2]    ),
+  .pmp_ifu_hit               (pmp_ifu_hit[2]           ),
+  .pmp_lsu_hit               (pmp_lsu_hit[2]           ),
+  .pmpaddr                   (pmpaddr2_value[31:0]     )
+);
+
+// &Instance("cr_iopmp_comp_hit", "x_cr_iopmp_comp_hit_3"); @153
+cr_iopmp_comp_hit  x_cr_iopmp_comp_hit_3 (
+  .addr_match_mode           (regs_comp_addr_mode3[1:0]),
+  .ifu_acc_addr              (input_addr_0[31:0]       ),
+  .ifu_addr_ge_bottom        (ifu_addr_ge_bottom[2]    ),
+  .ifu_addr_ge_pmpaddr       (ifu_addr_ge_bottom[3]    ),
+  .lsu_acc_addr              (input_addr_1[31:0]       ),
+  .lsu_addr_ge_bottom        (lsu_addr_ge_bottom[2]    ),
+  .lsu_addr_ge_pmpaddr       (lsu_addr_ge_bottom[3]    ),
+  .pmp_ifu_hit               (pmp_ifu_hit[3]           ),
+  .pmp_lsu_hit               (pmp_lsu_hit[3]           ),
+  .pmpaddr                   (pmpaddr3_value[31:0]     )
+);
+
+// &Instance("cr_iopmp_comp_hit", "x_cr_iopmp_comp_hit_4"); @168
+cr_iopmp_comp_hit  x_cr_iopmp_comp_hit_4 (
+  .addr_match_mode           (regs_comp_addr_mode4[1:0]),
+  .ifu_acc_addr              (input_addr_0[31:0]       ),
+  .ifu_addr_ge_bottom        (ifu_addr_ge_bottom[3]    ),
+  .ifu_addr_ge_pmpaddr       (ifu_addr_ge_bottom[4]    ),
+  .lsu_acc_addr              (input_addr_1[31:0]       ),
+  .lsu_addr_ge_bottom        (lsu_addr_ge_bottom[3]    ),
+  .lsu_addr_ge_pmpaddr       (lsu_addr_ge_bottom[4]    ),
+  .pmp_ifu_hit               (pmp_ifu_hit[4]           ),
+  .pmp_lsu_hit               (pmp_lsu_hit[4]           ),
+  .pmpaddr                   (pmpaddr4_value[31:0]     )
+);
+
+// &Instance("cr_iopmp_comp_hit", "x_cr_iopmp_comp_hit_5"); @183
+cr_iopmp_comp_hit  x_cr_iopmp_comp_hit_5 (
+  .addr_match_mode           (regs_comp_addr_mode5[1:0]),
+  .ifu_acc_addr              (input_addr_0[31:0]       ),
+  .ifu_addr_ge_bottom        (ifu_addr_ge_bottom[4]    ),
+  .ifu_addr_ge_pmpaddr       (ifu_addr_ge_bottom[5]    ),
+  .lsu_acc_addr              (input_addr_1[31:0]       ),
+  .lsu_addr_ge_bottom        (lsu_addr_ge_bottom[4]    ),
+  .lsu_addr_ge_pmpaddr       (lsu_addr_ge_bottom[5]    ),
+  .pmp_ifu_hit               (pmp_ifu_hit[5]           ),
+  .pmp_lsu_hit               (pmp_lsu_hit[5]           ),
+  .pmpaddr                   (pmpaddr5_value[31:0]     )
+);
+
+// &Instance("cr_iopmp_comp_hit", "x_cr_iopmp_comp_hit_6"); @198
+cr_iopmp_comp_hit  x_cr_iopmp_comp_hit_6 (
+  .addr_match_mode           (regs_comp_addr_mode6[1:0]),
+  .ifu_acc_addr              (input_addr_0[31:0]       ),
+  .ifu_addr_ge_bottom        (ifu_addr_ge_bottom[5]    ),
+  .ifu_addr_ge_pmpaddr       (ifu_addr_ge_bottom[6]    ),
+  .lsu_acc_addr              (input_addr_1[31:0]       ),
+  .lsu_addr_ge_bottom        (lsu_addr_ge_bottom[5]    ),
+  .lsu_addr_ge_pmpaddr       (lsu_addr_ge_bottom[6]    ),
+  .pmp_ifu_hit               (pmp_ifu_hit[6]           ),
+  .pmp_lsu_hit               (pmp_lsu_hit[6]           ),
+  .pmpaddr                   (pmpaddr6_value[31:0]     )
+);
+
+// &Instance("cr_iopmp_comp_hit", "x_cr_iopmp_comp_hit_7"); @213
+cr_iopmp_comp_hit  x_cr_iopmp_comp_hit_7 (
+  .addr_match_mode           (regs_comp_addr_mode7[1:0]),
+  .ifu_acc_addr              (input_addr_0[31:0]       ),
+  .ifu_addr_ge_bottom        (ifu_addr_ge_bottom[6]    ),
+  .ifu_addr_ge_pmpaddr       (ifu_addr_ge_bottom[7]    ),
+  .lsu_acc_addr              (input_addr_1[31:0]       ),
+  .lsu_addr_ge_bottom        (lsu_addr_ge_bottom[6]    ),
+  .lsu_addr_ge_pmpaddr       (lsu_addr_ge_bottom[7]    ),
+  .pmp_ifu_hit               (pmp_ifu_hit[7]           ),
+  .pmp_lsu_hit               (pmp_lsu_hit[7]           ),
+  .pmpaddr                   (pmpaddr7_value[31:0]     )
+);
+
+endmodule
+
+
+
