@@ -1,7 +1,7 @@
 # *DITES: A Dual Core TEE SoC Based on RISC-V*
 # *(Please note that this is the initial version (V2.0) and we will gradually update the introduction of each document.)*
-## *The main code of DITES (include the change of CPU, SoC, Crypto Core and IOPMP) has been uploaded.*
-## **contact information:Yuehai Chen (reshaker@163.com)**
+## *The main code of DITES (include the change of CPU, SoC, Crypto Core and IOPMP) has been uploaded. Date: April-11-2023*
+## **Contact information:Yuehai Chen (reshaker@163.com)**
 > *Copyright (C) 2021-2022, Guangdong University of Technology, Guangzhou*
 
 > *Digital HDL source code of DITES is free: you can redistribute it and/or modify it under the terms of the Solderpad Hardware License v2.0, which extends the Apache v2.0 license for hardware use.*
